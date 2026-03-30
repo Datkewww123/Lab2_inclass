@@ -10,26 +10,28 @@ import androidx.annotation.NonNull;
 public class GameView extends SurfaceView implements SurfaceHolder.Callback{
 
     GameThread gameThread;
+
     public GameView(Context context) {
         super(context);
         InitView();
     }
+
     @Override
     public void surfaceCreated(@NonNull SurfaceHolder surfaceHolder) {
-        
         if (gameThread == null || !gameThread.isAlive()) {
             gameThread = new GameThread(surfaceHolder);
             gameThread.start();
         }
     }
+
     @Override
     public void surfaceChanged(@NonNull SurfaceHolder surfaceHolder, int i, int i1 , int i2) {
-
+        // Không cần xử lý gì khi surface thay đổi kích thước
     }
 
     @Override
     public void surfaceDestroyed(@NonNull SurfaceHolder surfaceHolder) {
-        if (gameThread.isRunning()) {
+        if (gameThread != null && gameThread.isRunning()) {
             gameThread.setRunning(false);
             boolean retry = true;
             while (retry) {
@@ -37,8 +39,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback{
                     gameThread.join();
                     retry = false;
                 } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
-                            retry = false;
+                    Thread.currentThread().interrupt();
+                    retry = false;
                 }
             }
         }
@@ -50,19 +52,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback{
         setFocusable(true);
         gameThread = new GameThread(holder);
     }
+
     @Override
     public boolean onTouchEvent(MotionEvent event){
         int action = event.getAction();
         if(action == MotionEvent.ACTION_DOWN){
-            GameEngine engine = AppConstants.getGameEngine();
-            if (engine.getGameState() == 0 && engine != null) {
-                engine.resetGame();
-                engine.setGameState(1);
-                engine.bird.flap();
-            } else {
-                engine.setGameState(1);
-                engine.bird.flap();
-            }
+            performClick();
         }
         return true;
     }

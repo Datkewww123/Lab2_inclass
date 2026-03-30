@@ -1,6 +1,8 @@
 package com.example.flappybirdclone;
 
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Rect;
 
 import java.util.Random;
@@ -18,6 +20,9 @@ public class Pipe {
     private int pipeWidth;
     private boolean passed;
 
+    // AI: Công cụ để tô màu phần ống bị cụt
+    private Paint pipeBodyPaint;
+
     private static final Random RANDOM = new Random();
 
     public Pipe(int startX, int gapHeight, int speed) {
@@ -29,20 +34,29 @@ public class Pipe {
         this.speed = speed;
         topRect = new Rect();
         bottomRect = new Rect();
+
+        // Setup chổi sơn màu xanh để nối ống
+        pipeBodyPaint = new Paint();
+        // Tôi đang để tạm mã màu #74BF2E (màu xanh chuẩn của Flappy Bird gốc)
+        pipeBodyPaint.setColor(Color.parseColor("#74BF2E"));
+        pipeBodyPaint.setStyle(Paint.Style.FILL);
+
         reset(startX);
         updateRects();
     }
 
     public void reset(int startX) {
         this.x = startX;
-        int topLimit = Math.max(0, pipeHeight + 20);
-        int groundMargin = (int) (screenHeight * 0.12f);
-        int bottomLimit = Math.max(0, screenHeight - pipeHeight - gapHeight - groundMargin);
-        if (bottomLimit <= topLimit) {
+        int minDistance = (int) (screenHeight * 0.15f);
+        int minGapY = minDistance;
+        int maxGapY = screenHeight - gapHeight - minDistance;
+
+        if (maxGapY <= minGapY) {
             this.gapY = (screenHeight - gapHeight) / 2;
         } else {
-            this.gapY = topLimit + RANDOM.nextInt(bottomLimit - topLimit + 1);
+            this.gapY = minGapY + RANDOM.nextInt(maxGapY - minGapY + 1);
         }
+
         this.passed = false;
         updateRects();
     }
@@ -91,13 +105,18 @@ public class Pipe {
     public void draw(Canvas canvas) {
         int yTop = gapY - pipeHeight;
         canvas.drawBitmap(AppConstants.getBitmapBank().getTopPipe(), x, yTop, null);
+        if (yTop > 0) {
+            canvas.drawRect(x, 0, x + width, yTop, pipeBodyPaint);
+        }
         int yBottom = gapY + gapHeight;
         canvas.drawBitmap(AppConstants.getBitmapBank().getBottomPipe(), x, yBottom, null);
+        int bottomPipeEnd = yBottom + pipeHeight;
+        if (bottomPipeEnd < screenHeight) {
+            canvas.drawRect(x, bottomPipeEnd, x + width, screenHeight, pipeBodyPaint);
+        }
     }
 
     public int getX() {
         return x;
     }
 }
-
-
